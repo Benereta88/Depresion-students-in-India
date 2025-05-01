@@ -1,0 +1,19 @@
+{
+  "name": "statistics-template",
+  "version": "6.0.0",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "start": "nodemon backend/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@stdlib/esm": "^0.0.3",
+    "better-sqlite3": "^11.9.1",
+    "express": "^4.21.2",
+    "nodemon": "^3.1.9"
+  }
+}
