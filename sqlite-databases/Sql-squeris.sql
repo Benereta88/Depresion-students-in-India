@@ -3,9 +3,17 @@ select gender, age, sleep_duration
 where age > 24 and sleep_duration < 5-6;
 
 
- SELECT age, 
-         AVG(CAST(depression AS FLOAT)) * 100 AS depression_rate
-  FROM results
-  WHERE sleep_duration > 5-6
-  GROUP BY age
-  ORDER BY age
+
+SELECT sleep_duration, sleep_hours FROM results LIMIT 10;
+
+
+   SELECT age, AVG(depression) * 100 AS depression_rate
+FROM results
+ WHERE sleep_hours = 5.5
+
+GROUP BY age
+ORDER BY age;
+
+
+
+  SELECT DISTINCT sleep_duration FROM results;

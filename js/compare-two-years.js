@@ -1,46 +1,98 @@
-let years = (await dbQuery(
-  'SELECT DISTINCT year FROM dataWithMonths'
-)).map(x => x.year);
+// Definiera presskategorier och etiketter inklusive sömn
+const pressTypes = [
+  { column: 'academic_pressure', label: 'Akademisk press' },
+  { column: 'work_pressure', label: 'Jobbpress' },
+];
 
-let year1 = addDropdown('År 1', years, 1964);
-let year2 = addDropdown('År 2', years, 2024);
+// Skapa dropdowns för kategori och kön
+let selectedPress = addDropdown('Välj kategori:', pressTypes.map(p => p.label), 'Akademisk press', updateChart);
+let selectedGender = addDropdown('Välj kön:', ['Alla', 'Man', 'Kvinna'], 'Alla', updateChart);
 
-addMdToPage(`
-  ## Medeltemperaturer i Malmö, jämförelse mellan år ${year1} och år ${year2}
-`);
+// Initiera visning
+await updateChart();
 
-// in order to get the two years to compare
-// we perform a join between two subselects
-let dataForChart = await dbQuery(`
-  SELECT monthName1 AS monthName, temp1, temp2 FROM
-    (SELECT monthNameShort AS monthName1, temperatureC AS temp1 FROM dataWithMonths WHERE year = '${year1}') AS t1,
-    (SELECT monthNameShort AS monthName2, temperatureC AS temp2 FROM dataWithMonths WHERE year = '${year2}') AS t2
-  WHERE t1.monthName1 = t2.monthName2
-`);
+// Huvudfunktion för att uppdatera vyn
+async function updateChart() {
+  document.querySelector('#chart-container')?.remove();
+  document.querySelector('#table-container')?.remove();
+  document.querySelector('#legend-container')?.remove();
 
-drawGoogleChart({
-  type: 'LineChart',
-  data: makeChartFriendly(dataForChart, 'månad', `°C ${year1}`, `°C ${year2}`),
-  options: {
-    height: 500,
-    chartArea: { left: 50, right: 0 },
-    curveType: 'function',
-    pointSize: 5,
-    pointShape: 'circle',
-    vAxis: { format: '# °C' },
-    title: `Medeltemperatur per månad i Malmö, jämförelse mellan år ${year1} och ${year2} (°C)`
+  let pressObj = pressTypes.find(p => p.label === selectedPress);
+  let pressColumn = pressObj.column;
+  let pressLabel = pressObj.label;
+
+  let genderCondition = '';
+  if (selectedGender === 'Man') genderCondition = "AND gender = 'Male'";
+  if (selectedGender === 'Kvinna') genderCondition = "AND gender = 'Female'";
+
+  let sql = `
+    SELECT CAST(${pressColumn} AS TEXT) AS pressure_label, COUNT(*) AS count
+    FROM results
+    WHERE ${pressColumn} IS NOT NULL AND depression = 1
+    ${genderCondition}
+    GROUP BY pressure_label
+    ORDER BY pressure_label
+  `;
+
+  let data = await dbQuery(sql);
+
+  // Textsammanfattning
+  addMdToPage(`## Andel med depression per ${pressLabel.toLowerCase()} (${selectedGender.toLowerCase()})\n`);
+
+  if (!data.length) {
+    addMdToPage(`❗ Ingen data hittades för kombinationen "${pressLabel}" och kön "${selectedGender}".`);
+    return;
   }
-});
 
-// the same db query as before, but with the long month names
-let dataForTable = await dbQuery(`
-  SELECT monthName1 AS monthName, temp1, temp2 FROM
-    (SELECT monthName AS monthName1, temperatureC AS temp1 FROM dataWithMonths WHERE year = '${year1}') AS t1,
-    (SELECT monthName AS monthName2, temperatureC AS temp2 FROM dataWithMonths WHERE year = '${year2}') AS t2
-  WHERE t1.monthName1 = t2.monthName2
-`);
+  for (let row of data) {
+    addMdToPage(`- ${pressLabel} ${row.pressure_label}: **${row.count} personer** med depression`);
+  }
 
-tableFromData({
-  data: dataForTable,
-  columnNames: ['Månad', `Medeltemperatur (°C) ${year1}`, `Medeltemperatur (°C) ${year2}`]
-});
+  // Färgspektrum röd → orange → gul → ljusgrön → grön → mörkgrön
+  const gradientColors = ['#d32f2f', '#f57c00', '#fbc02d', '#388e3c', '#81c784', '#aed581'];
+
+  // Sortera data efter värde (antal)
+  const sorted = [...data].sort((a, b) => a.count - b.count);
+  const colorMap = data.map(row => {
+    const index = sorted.findIndex(r => r.pressure_label === row.pressure_label);
+    return gradientColors[index % gradientColors.length];
+  });
+
+  // Konvertera till rätt format för BarChart
+  const chartData = [['Kategori', 'Antal', { role: 'style' }]].concat(
+    data.map((row, i) => [String(row.pressure_label), row.count, colorMap[i]])
+  );
+
+  drawGoogleChart({
+    type: 'BarChart',
+    data: chartData,
+    options: {
+      title: `Depression per ${pressLabel.toLowerCase()} (${selectedGender.toLowerCase()})`,
+      height: 400,
+      legend: 'none',
+      bar: { groupWidth: '60%' },
+      hAxis: { title: 'Antal personer med depression' },
+      vAxis: { title: pressLabel }
+    },
+    elementId: 'chart-container'
+  });
+
+  // Visa färglegend
+  addMdToPage(`\n<div id="legend-container">
+    <strong>Färgförklaring:</strong>
+    <ul>
+      <li><span style="color:#d32f2f">■</span> Högst andel depression</li>
+      <li><span style="color:#f57c00">■</span> Nästan hög</li>
+      <li><span style="color:#fbc02d">■</span> Medel</li>
+      <li><span style="color:#388e3c">■</span> Nästan låg</li>
+      <li><span style="color:#81c784">■</span> Låg</li>
+      <li><span style="color:#aed581">■</span> Lägst andel depression</li>
+    </ul>
+  </div>`);
+
+  // Visa tabell med data
+  tableFromData(data, {
+    columns: [pressLabel, 'Antal'],
+    elementId: 'table-container'
+  });
+}
