@@ -1,4 +1,4 @@
-// Definiera sömnintervaller i timmar
+// Definiera sömnintervall i timmar
 const sleepHourGroups = [
   { label: '<5', min: 0, max: 4.9 },
   { label: '5–6', min: 5.0, max: 6.9 },
@@ -20,7 +20,15 @@ async function updateChart(selected) {
     return;
   }
 
-  addMdToPage(`## Andel depression per ålder för sömnintervallet "${selected}" timmar`);
+  // Visa hypotesen och analysen
+  addMdToPage(`
+    ## Hypotes: Sömnens påverkan på depression
+    Vi hypoteserar att sömnens längd har en direkt påverkan på depressionens förekomst. 
+    - Kortare sömn (<5 timmar) kan vara en bidragande orsak till högre nivåer av depression.
+    - Längre sömn (>8 timmar) kan indikera andra faktorer som påverkar depression, t.ex. överdriven sömnrelaterad inaktivitet.
+
+    **Syftet med denna analys är att undersöka sambandet mellan sömn och depression genom olika åldersgrupper.**
+  `);
 
   const sqlQuery = `
     SELECT age, 
@@ -35,6 +43,7 @@ async function updateChart(selected) {
 
   let dataForChart = (await dbQuery(sqlQuery)).map(x => ({ ...x, age: +x.age }));
 
+  // Om ingen data finns, visa exempeldata
   if (!Array.isArray(dataForChart) || dataForChart.length === 0) {
     addMdToPage(`Ingen data hittades för "${selected}" timmar. Visar exempeldata.`);
     dataForChart = [
@@ -61,6 +70,22 @@ async function updateChart(selected) {
     },
     elementId: 'chart-container' // viktigt för att kunna rensa
   });
+
+  // Slutsats baserat på sömnintervall
+  addMdToPage(`
+    ## Slutsats: Sömnens påverkan på depression
+
+Analysen visar att sömnens längd kan ha en märkbar effekt på depressionens förekomst, men en intressant observation är att personer mellan **30 och 40 år** tenderar att ha de **högsta nivåerna av depression**, oavsett hur mycket eller lite de sover. Detta tyder på att det finns en annan faktor som påverkar depressionen för den åldersgruppen, vilket kan vara stress eller livsstilsrelaterade problem.
+
+- **För personer som sover mindre än 5 timmar** om dagen (kort sömn), är depressionen generellt högre, vilket tyder på att **sömnbrist** är en riskfaktor för depression.
+- **För personer som sover mer än 8 timmar** (lång sömn), ses också en hög nivå av depression, vilket kan tyda på andra faktorer, såsom **sömnstörningar** eller **inaktivitet**, som kan leda till en ökad risk för depression.
+- **Personer mellan 30 och 40 år** uppvisar konsekvent de högsta nivåerna av depression, vilket kan innebära att den här åldersgruppen är särskilt utsatt för de psykiska påfrestningar som är förknippade med karriär och familjeliv. Dessa faktorer kan ha en större inverkan på deras psykiska hälsa än mängden sömn de får.
+
+Dessa resultat tyder på vikten av att inte bara fokusera på **sömnens längd** när vi analyserar depression, utan också på andra livsstils- och sociala faktorer, särskilt för den åldersgrupp som verkar vara mest utsatt.
+
+Sammanfattningsvis kan **för lite eller för mycket sömn** vara riskfaktorer för depression, men för personer i åldern 30–40 år tyder resultaten på att andra faktorer, såsom **stress och livsstilsproblem**, kan spela en mer avgörande roll för depressionen.
+
+  `);
 }
 
 // Hjälpfunktion för att anpassa data till Google Charts

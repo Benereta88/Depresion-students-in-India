@@ -1,6 +1,7 @@
 createMenu('Statistics Template JS', [
 
-  { name: 'Visa ett år', script: 'one-year.js' },
-  { name: 'Jämför två år', script: 'compare-two-years.js' },
-  { name: 'Hitta trender', script: 'trends.js' }
+  { name: 'Familjhistorisk och suicidaltankar påverkan ', script: 'familjhistorisk-suicidaltankar.js' },
+  { name: 'Sömnens längd påverkan ', script: 'trends-av-somnens.js' },
+  { name: 'Jämför akademisk & jobbrelaterad press ', script: 'compare-akademisk-jobbrelaterad-press.js' },
+  { name: 'Skriftligt analys ', script: 'Analys-skriflig.js' },
 ]);
