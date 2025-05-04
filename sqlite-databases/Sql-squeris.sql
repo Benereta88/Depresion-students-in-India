@@ -1,4 +1,4 @@
---
+
 
 SELECT gender, CAST(${pressColumn} AS TEXT) AS pressure_label, COUNT(*) AS count
       FROM results
@@ -35,5 +35,5 @@ SELECT gender, CAST(${pressColumn} AS TEXT) AS pressure_label, COUNT(*) AS count
     GROUP BY age
     ORDER BY age;
 
-    SELECT * FROM results
-    GROUP BY category;
+    --
+    SELECT * FROM results;
