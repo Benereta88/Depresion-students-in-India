@@ -16,7 +16,8 @@ addMdToPage(`
 ## Hypotes
 Vi förväntar oss att personer med en familjehistorik av psykisk ohälsa har högre risk för depression,
  då genetiska faktorer och uppväxtmiljö tros spela en roll. Dessutom förväntas personer som har haft
-  suicidaltankar uppvisa en högre förekomst av depression, vilket återspeglar en starkare koppling mellan depression och suicidrisk.
+  suicidaltankar uppvisa en högre förekomst av depression, vilket återspeglar en starkare koppling
+   mellan depression och suicidrisk.
 `);
 
 // === Hämta data från databasen ===
@@ -57,7 +58,8 @@ drawGoogleChart({
 });
 
 addMdToPage(`
-**Analys:** Resultatet tyder på att personer med en familjehistorik av psykisk ohälsa uppvisar en högre genomsnittlig förekomst av depression. Det kan indikera ett genetiskt eller miljöbetingat samband, där både arv och uppväxtmiljö spelar in.
+**Analys:** Resultatet tyder på att personer med en familjehistorik av psykisk ohälsa uppvisar en högre genomsnittlig 
+förekomst av depression. Det kan indikera ett genetiskt eller miljöbetingat samband, där både arv och uppväxtmiljö spelar in.
 `);
 
 // === Visa och analysera suicidaltankar ===
