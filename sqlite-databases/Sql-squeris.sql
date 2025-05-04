@@ -34,3 +34,6 @@ SELECT gender, CAST(${pressColumn} AS TEXT) AS pressure_label, COUNT(*) AS count
     WHERE sleep_hours BETWEEN ${selectedRange.min} AND ${selectedRange.max}
     GROUP BY age
     ORDER BY age;
+
+    SELECT * FROM results
+    GROUP BY category;
